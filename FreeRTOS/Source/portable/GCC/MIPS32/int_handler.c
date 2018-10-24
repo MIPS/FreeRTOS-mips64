@@ -77,6 +77,15 @@ volatile uint32_t *GIC;
 uint32_t EIC;
 
 
+/*Compressed (16bit) instruction streams are big endian halfword order */
+#if defined(__nanomips__)
+static inline uint32_t SWAP16(uint32_t val)
+{
+	return (val >> 16) | (val << 16);
+}
+#endif
+
+
 /* The interrupt vector table.*/
 extern void prvInterruptHandoff( void );
 
@@ -179,18 +188,27 @@ uint32_t stride = ( mips32_getintctl() & INTCTL_VS );
 	addr_hi = (((uint32_t)fn) & 0xffff0000) >> 16;
 	addr_lo = (uint32_t)fn & 0x0000ffff;
 
-#ifdef __mips_micromips
+#if defined(__mips_micromips)
 	/* in micromips the higher nibble of 4 bytes word is the address to patch */
 	*(uint16_t *)( pvISR + 2 ) = addr_hi;
 	*(uint16_t *)( pvISR + 6 ) = addr_lo;
+#elif defined(__nanomips__)
+	/* in nanomips the LUI encoding is batsh1t crazy */
+	*(uint32_t *)( pvISR) &= SWAP16(~0x001FFFFD);
+	*(uint32_t *)( pvISR) |= SWAP16( ((uint32_t)fn & 0x001FF000) | ((addr_hi << 1) >> 4) & 0x0ffc | addr_hi >> 15 );
+
+	*(uint32_t *)( pvISR + 4 ) &= SWAP16(~0x00000FFF);
+	*(uint32_t *)( pvISR + 4 ) |= SWAP16(addr_lo & 0xFFF);
+
 #else
 	/* in mips32 the lower nibble of 4 bytes word is the address to patch */
 	*(uint16_t *)( pvISR + 0 ) = addr_hi;
 	*(uint16_t *)( pvISR + 4 ) = addr_lo;
 #endif
 
-	/* Flush the caches */
-	mips_flush_cache();
+	/*sync the Icache */
+	if ( mips32_getconfig1() & CFG1_IL_MASK)
+		mips_sync_icache((uint32_t)pvISR,16);
 
 	if ( !EIC )
 		mips_bissr(SR_IM0 << uxPriority);

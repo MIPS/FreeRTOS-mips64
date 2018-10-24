@@ -81,7 +81,7 @@ void hardware_init_hook(void)
 	/* Initialise the GIC */
 	vPortInitGIC();
 
-#ifdef __mips_micromips
+#if defined(__mips_micromips) || defined(__nanomips__)
 
 	/* Ensure micromips is supported */
 	assert( mips32_getconfig3() & CFG3_MCU );
