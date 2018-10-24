@@ -102,6 +102,8 @@ endif
 # an isr due to overlapping.
 LDSCRIPT+=-Wl,--defsym,__isr_vec_count=64
 
+LDSCRIPT += -lcm3
+
 # __use_excpt_boot means we can use a bootloader (ie: uboot) to perform uhi
 # functionality. We can't assume such a bootloader exist so always set it to 0.
 LDSCRIPT+=-Wl,--defsym,__use_excpt_boot=0
