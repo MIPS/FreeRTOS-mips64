@@ -85,7 +85,7 @@
 #define configTICK_RATE_HZ                          ( CONFIG_TICK_RATE_HZ )
 #define configUSE_16_BIT_TICKS                      0
 #define configMAX_PRIORITIES                        ( CONFIG_MAX_PRIORITIES )
-#define configMINIMAL_STACK_SIZE                    ( CONFIG_STACK_SIZE/2 )
+#define configMINIMAL_STACK_SIZE                    ( CONFIG_STACK_SIZE/1 )
 #define configISR_STACK_SIZE                        ( CONFIG_STACK_SIZE/2 )
 #define configTOTAL_HEAP_SIZE						( ( size_t ) CONFIG_HEAP_SIZE/2 )
 #define configMAX_TASK_NAME_LEN                     ( 16 )

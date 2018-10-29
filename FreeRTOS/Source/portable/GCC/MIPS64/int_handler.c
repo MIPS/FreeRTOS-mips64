@@ -189,8 +189,9 @@ uint32_t stride = ( mips32_getintctl() & INTCTL_VS );
 	*(uint16_t *)( pvISR + 4 ) = addr_lo;
 #endif
 
-	/* Flush the caches */
-	mips_flush_cache();
+	/*sync the Icache */
+	if ( mips32_getconfig1() & CFG1_IL_MASK)
+		mips_sync_icache((uint32_t)pvISR,16);
 
 	if ( !EIC )
 		mips_bissr(SR_IM0 << uxPriority);
