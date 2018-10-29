@@ -11,8 +11,9 @@ include $(CONFIG_FILE)
 TOP = $(PWD)
 
 # Are we compiling for the Rev 6 ISA
-ifeq ($(ARCH),mips32r6)
+ifeq ($(ARCH),mips64r6)
 CROSS_COMPILE ?= mips-img-elf
+CFLAGS += -mabi=64
 else
 CROSS_COMPILE ?= mips-mti-elf
 endif
@@ -60,13 +61,17 @@ ifeq ($(TRACE),1)
 CFLAGS +=-DENABLE_TRACE
 endif
 
-MIPS32_SRC_DIR=../../Source/portable/GCC/MIPS32
+MIPS64_SRC_DIR=../../Source/portable/GCC/MIPS64
 
 # Include paths
-INCLUDE = -I. -I./include -I../../Source/include -I$(MIPS32_SRC_DIR) -I../Common/include
+INCLUDE = -I. -I./include -I../../Source/include -I$(MIPS64_SRC_DIR) -I../Common/include
 
 # C Flags
+ifeq ($(DEBUG),1)
+CFLAGS += -march=$(ARCH) -g $(INCLUDE) -O0
+else
 CFLAGS += -march=$(ARCH) -g $(INCLUDE) -O3
+endif
 
 # Customise FreeRTOS settings
 CFLAGS += -DCONFIG_CPU_CLOCK_HZ=$(CPU_CLOCK_HZ)
@@ -77,30 +82,15 @@ CFLAGS += -DCONFIG_STACK_SIZE=$(STACK_SIZE)
 CFLAGS += -DCONFIG_HEAP_SIZE=$(HEAP_SIZE)
 CFLAGS += -DCONFIG_MAX_PRIORITIES=$(MAX_PRIORITIES)
 
-# Use default uhi32.ld from SDK. If we use bootable code use our own which
-# contains some modifications to support moving the boot_start. Hopefully in
-# the future the SDK will support that and we can use the default one from the
-# SDK too.
-ifeq ($(ROMABLE), 0)
-LDSCRIPT=-Tuhi32.ld
-else
-ifeq ($(TWO_STAGE_BOOT), 0)
-LDSCRIPT=-Tbootcode.ld -Tboot/uhi32.ld
-LDSCRIPT+=-Wl,--defsym,__bootrom_start=$(BOOT_START)
-else
-LDSCRIPT=-Tuhi32.ld
-BOOT_LDSCRIPT=-Tbootcode.ld -Tboot/uhi32.ld
-BOOT_LDSCRIPT+=-Wl,--defsym,__bootrom_start=$(BOOT_START)
-BOOT_LDSCRIPT+=-Wl,--defsym,__app_start=$(BOOT_START)
-BOOT_LDSCRIPT+=-Wl,--defsym,__memory_size=32K
-BOOT_LDSCRIPT+=-Wl,--defsym,__memory_base=$(BOOT_START)
-endif
-endif
+# Use uhi64_64.ld from SDK. 
+LDSCRIPT=-Tuhi64_64.ld
 
 # Set vector count to maximum possible (64) when eic is selected.
 # This avoids the potential problem of overwriting text section when installing
 # an isr due to overlapping.
 LDSCRIPT+=-Wl,--defsym,__isr_vec_count=64
+
+LDSCRIPT += -lcm3
 
 # __use_excpt_boot means we can use a bootloader (ie: uboot) to perform uhi
 # functionality. We can't assume such a bootloader exist so always set it to 0.
@@ -134,17 +124,17 @@ SRC := \
 	../../Source/tasks.c \
 	../../Source/list.c \
 	../../Source/timers.c \
-	$(MIPS32_SRC_DIR)/port.c \
-	$(MIPS32_SRC_DIR)/int_handler.c \
-	$(MIPS32_SRC_DIR)/port_timer.c \
-	$(MIPS32_SRC_DIR)/init_hook.c \
+	$(MIPS64_SRC_DIR)/port.c \
+	$(MIPS64_SRC_DIR)/int_handler.c \
+	$(MIPS64_SRC_DIR)/port_timer.c \
+	$(MIPS64_SRC_DIR)/init_hook.c \
 	../../Source/portable/MemMang/heap_1.c \
 	../../Source/event_groups.c \
 	main.c
 
 ASMSRC := \
-	$(MIPS32_SRC_DIR)/port_asm.S \
-	$(MIPS32_SRC_DIR)/handler.S
+	$(MIPS64_SRC_DIR)/port_asm.S \
+	$(MIPS64_SRC_DIR)/handler.S
 
 ifeq ($(ROMABLE), 1)
 INCLUDE += -I $(MIPS_ELF_ROOT)/share/mips/boot
@@ -206,7 +196,7 @@ $(OBJDIR)/%.o : ../../Source/portable/MemMang/%.c $(CONFIG_FILE)
 	$(GCC) -c $(CFLAGS) $< -o $@
 	@$(GCC) -c $(CFLAGS) -MM -MT $@ -MF $(subst .o,.d,$@) $< -o $(subst .o,.d,$@)
 
-$(OBJDIR)/%.o : $(MIPS32_SRC_DIR)/%.c $(CONFIG_FILE)
+$(OBJDIR)/%.o : $(MIPS64_SRC_DIR)/%.c $(CONFIG_FILE)
 	$(GCC) -c $(CFLAGS) $< -o $@
 	@$(GCC) -c $(CFLAGS) -MM -MT $@ -MF $(subst .o,.d,$@) $< -o $(subst .o,.d,$@)
 
@@ -218,7 +208,7 @@ $(OBJDIR)/%.o : %.c $(CONFIG_FILE)
 	$(GCC) -c $(CFLAGS) $< -o $@
 	@$(GCC) -c $(CFLAGS) -MM -MT $@ -MF $(subst .o,.d,$@) $< -o $(subst .o,.d,$@)
 
-$(OBJDIR)/%.o : $(MIPS32_SRC_DIR)/%.S $(CONFIG_FILE)
+$(OBJDIR)/%.o : $(MIPS64_SRC_DIR)/%.S $(CONFIG_FILE)
 	$(GCC) -c $(CFLAGS) $< -o $@
 	@$(GCC) -c $(CFLAGS) -MM -MT $@ -MF $(subst .o,.d,$@) $< -o $(subst .o,.d,$@)
 
