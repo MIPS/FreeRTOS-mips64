@@ -83,19 +83,19 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	/* Make room for the context. First save the current status so it can be
 	manipulated, and the cause and EPC registers so their original values are
 	captured. */
-	addiu       sp, sp, -CTX_SIZE
-	sw          k1, CTX_K1(sp)
+	daddiu      sp, sp, -CTX_SIZE
+	sd          k1, CTX_K1(sp)
 
 	/* k1 is used as the frame pointer. */
-	addu         k1, zero, sp
+	daddu       k1, zero, sp
 
 	/* Save the context into the space just created. */
 	_gpctx_save
 
 	/* Save the stack pointer. */
-	la          s6, uxSavedTaskStackPointer
-	sw          k1, (s6)
-	lw          k1, CTX_K1(sp)
+	dla         s6, uxSavedTaskStackPointer
+	sd          k1, (s6)
+	ld          k1, CTX_K1(sp)
 
 	.endm
 
@@ -104,17 +104,17 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 /* Restore the processor context. */
 .macro  portRESTORE_CONTEXT
 
-	la          s6, uxSavedTaskStackPointer
-	lw          a0, (s6)
+	dla         s6, uxSavedTaskStackPointer
+	ld          a0, (s6)
 
 	/* Restore the context. */
 	_gpctx_load
 
-	la          sp, uxSavedTaskStackPointer
-	lw          sp, (sp)
+	dla         sp, uxSavedTaskStackPointer
+	ld          sp, (sp)
 
 
-	addiu       sp, sp, CTX_SIZE
+	daddiu      sp, sp, CTX_SIZE
 
 	eret
 	nop
@@ -128,24 +128,24 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 
 	/* Make room for the context. First save the current status so it can be
 	manipulated. */
-	addiu       sp, sp, -CTX_SIZE
-	sw          k1, CTX_K1(sp)
+	daddiu      sp, sp, -CTX_SIZE
+	sd          k1, CTX_K1(sp)
 
 	/* k0cd is used as the frame pointer. */
-	addu         k1, zero, sp
+	daddu       k1, zero, sp
 
 	/* Save the context into the space just created. */
 	_gpctx_save
 
 
 	/* Save the stack pointer to the task. */
-	la			s7, pxCurrentTCB
-	lw			s7, (s7)
-	sw			k1, (s7)
+	dla			s7, pxCurrentTCB
+	ld			s7, (s7)
+	sd			k1, (s7)
 
-	mfc0		s6, C0_CAUSE
+	dmfc0		s6, C0_CAUSE
 	ins			s6, zero, 8, 1
-	mtc0		s6, C0_CAUSE
+	dmtc0		s6, C0_CAUSE
 	ehb
 
 	.endm
@@ -155,9 +155,9 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	.macro portYIELD_RESTORE
 
 	/* Set the context restore register from the TCB. */
-	la			s0, pxCurrentTCB
-	lw			s0, (s0)
-	lw			a0, (s0)
+	dla			s0, pxCurrentTCB
+	ld			s0, (s0)
+	ld			a0, (s0)
 
 
 	/*
@@ -169,18 +169,18 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	 * so nothing changes on the restore
 	 */
 
-	mfc0	k0, C0_STATUS
-	sw		k0, CTX_STATUS(a0)
+	dmfc0	k0, C0_STATUS
+	sd		k0, CTX_STATUS(a0)
 
 	_gpctx_load
 
 	/* Restore the stack pointer from the TCB. */
-	la			sp, pxCurrentTCB
-	lw			sp, (sp)
-	lw			sp, (sp)
+	dla			sp, pxCurrentTCB
+	ld			sp, (sp)
+	ld			sp, (sp)
 
 	/* Remove stack frame. */
-	addiu		sp, sp, CTX_SIZE
+	daddiu		sp, sp, CTX_SIZE
 
 	eret
 	nop

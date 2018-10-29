@@ -119,7 +119,7 @@
 	PTR_MFC0 $31, C0_EPC
 	REG_S	$31, CTX_EPC(k1)
 	mfc0	$10, C0_STATUS
-	sw	$10, CTX_STATUS(k1)
+	sd	$10, CTX_STATUS(k1)
 .endm
 
 /* Restores a gp_ctx pointed to by a0.  Leaves interrupts disabled and
@@ -165,7 +165,7 @@
 	/* Restore CP0 registers, kernel registers and stack with
 	   interrupts disabled.  */
 	di
-	lw	$27, CTX_STATUS(a0)
+	ld	$27, CTX_STATUS(a0)
 	REG_L	$26, CTX_EPC(a0)
 	mtc0	$27, C0_STATUS
 	PTR_MTC0 $26, C0_EPC
