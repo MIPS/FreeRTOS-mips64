@@ -84,36 +84,36 @@ extern "C"
 #define HW5                 0x07
 
 /* GIC Base definitions */
-#define GCR_BASE GCR[0x8/sizeof(uint32_t)]
-#define GCR_GIC_BASE GCR[0x80/sizeof(uint32_t)]
+#define GCR_BASE GCR[0x8/sizeof(uint64_t)]
+#define GCR_GIC_BASE GCR[0x80/sizeof(uint64_t)]
 #define GIC_EN	1
-#define GCR_GIC_STATUS GCR[0xd0/sizeof(uint32_t)]
+#define GCR_GIC_STATUS GCR[0xd0/sizeof(uint64_t)]
 
 #define GIC_SH_CONFIG		GIC[0]
 #define NUMINTERRUPTS_MSK	0x007f0000
 #define NUMINTERRUPTS_SHF	16
 #define PVPES_MSK 			0x000001ff
 #define PVPES_SHF			0
-#define GIC_SH_POL31_0		GIC[0x100/sizeof(uint32_t)]
-#define GIC_SH_TRIG31_0		GIC[0x180/sizeof(uint32_t)]
-#define GIC_SH_DUAL31_0		GIC[0x200/sizeof(uint32_t)]
-#define GIC_SH_WEDGE		GIC[0x280/sizeof(uint32_t)]
-#define GIC_SH_RMASK31_0	GIC[0x300/sizeof(uint32_t)]
-#define GIC_SH_SMASK31_0	GIC[0x380/sizeof(uint32_t)]
-#define GIC_SH_PEND31_0		GIC[0x480/sizeof(uint32_t)]
-#define GIC_SH_MAP0_PIN		GIC[0x500/sizeof(uint32_t)]
-#define GIC_SH_MAP0_CORE	GIC[0x2000/sizeof(uint32_t)]
-#define GIC_CORE_SPACER		(0x20/sizeof(uint32_t))
+#define GIC_SH_POL31_0		GIC[0x100/sizeof(uint64_t)]
+#define GIC_SH_TRIG31_0		GIC[0x180/sizeof(uint64_t)]
+#define GIC_SH_DUAL31_0		GIC[0x200/sizeof(uint64_t)]
+#define GIC_SH_WEDGE		GIC[0x280/sizeof(uint64_t)]
+#define GIC_SH_RMASK31_0	GIC[0x300/sizeof(uint64_t)]
+#define GIC_SH_SMASK31_0	GIC[0x380/sizeof(uint64_t)]
+#define GIC_SH_PEND31_0		GIC[0x480/sizeof(uint64_t)]
+#define GIC_SH_MAP0_PIN		GIC[0x500/sizeof(uint64_t)]
+#define GIC_SH_MAP0_CORE	GIC[0x2000/sizeof(uint64_t)]
+#define GIC_CORE_SPACER		(0x20/sizeof(uint64_t))
 
-#define	GIC_COREi_CTL		GIC[0x8000/sizeof(uint32_t)]
-#define GIC_COREi_PEND		GIC[0x8004/sizeof(uint32_t)]
-#define	GIC_COREi_MASK		GIC[0x8008/sizeof(uint32_t)]
-#define	GIC_COREi_RMASK		GIC[0x800C/sizeof(uint32_t)]
-#define GIC_COREi_SMASK		GIC[0x8010/sizeof(uint32_t)]
-#define GIC_COREi_TIMER_MAP	GIC[0x8048/sizeof(uint32_t)]
-#define GIC_COREi_SWInt0_MAP	GIC[0x8054/sizeof(uint32_t)]
-#define GIC_COREi_IDENT		GIC[0x8088/sizeof(uint32_t)]
-#define GIC_COREi_EICVEC0	GIC[0x8800/sizeof(uint32_t)]
+#define	GIC_COREi_CTL		GIC[0x8000/sizeof(uint64_t)]
+#define GIC_COREi_PEND		GIC[0x8004/sizeof(uint64_t)]
+#define	GIC_COREi_MASK		GIC[0x8008/sizeof(uint64_t)]
+#define	GIC_COREi_RMASK		GIC[0x800C/sizeof(uint64_t)]
+#define GIC_COREi_SMASK		GIC[0x8010/sizeof(uint64_t)]
+#define GIC_COREi_TIMER_MAP	GIC[0x8048/sizeof(uint64_t)]
+#define GIC_COREi_SWInt0_MAP	GIC[0x8054/sizeof(uint64_t)]
+#define GIC_COREi_IDENT		GIC[0x8088/sizeof(uint64_t)]
+#define GIC_COREi_EICVEC0	GIC[0x8800/sizeof(uint64_t)]
 
 #define SWINT0_MASK	0x10
 #define SWINT1_MASK	0x20
@@ -135,9 +135,9 @@ extern "C"
 #define SR_TIMER_IRQ	(SR_IM0 << TIMER_IRQ)
 
 /* GIC Location */
-extern volatile uint32_t *GCR;
-extern volatile uint32_t *GIC;
-extern uint32_t EIC;
+extern volatile uint64_t *GCR;
+extern volatile uint64_t *GIC;
+extern uint64_t EIC;
 
 /* Initialise the GIC */
 void vPortInitGIC( void );
