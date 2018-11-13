@@ -143,7 +143,7 @@ extern uint64_t EIC;
 void vPortInitGIC( void );
 
 /* Interrupt manipulation */
-extern void pvPortInstallISR( uint32_t, void ( * )( void ) );
+extern void pvPortInstallISR( UBaseType_t, void ( * )( void ) );
 
 /*
  * The software interrupt handler that performs the yield.

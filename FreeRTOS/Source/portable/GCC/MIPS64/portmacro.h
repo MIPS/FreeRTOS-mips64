@@ -90,7 +90,7 @@ extern "C"
 #define portDOUBLE              double
 #define portLONG                long
 #define portSHORT               short
-#define portSTACK_TYPE          uint32_t
+#define portSTACK_TYPE          size_t
 #define portBASE_TYPE           long
 
 typedef portSTACK_TYPE StackType_t;
@@ -106,6 +106,7 @@ typedef uint32_t TickType_t;
 /* Hardware specifics. */
 #define portBYTE_ALIGNMENT		8
 #define portSTACK_GROWTH		-1
+#define portPOINTER_SIZE_TYPE 		uint64_t
 /*-----------------------------------------------------------*/
 
 /* Critical section management is done in the crit_sect.h file for the
