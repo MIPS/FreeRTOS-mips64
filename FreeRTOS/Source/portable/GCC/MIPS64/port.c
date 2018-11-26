@@ -176,20 +176,20 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 #endif
 
 	/* create a space for a full context */
-	pxTopOfStack -= CTX_SIZE/4;
+	pxTopOfStack -= CTX_SIZE/SZREG;
 #ifdef __mips_dsp
-	pxTopOfStack -= DSPCTX_SIZE/4;
+	pxTopOfStack -= DSPCTX_SIZE/SZREG;
 #endif
 
 	/* fill up some initial values for us to kick in */
-	*( pxTopOfStack + CTX_CAUSE/4 ) = (StackType_t) mips_getcr();
-	*( pxTopOfStack + CTX_STATUS/4 ) = (StackType_t) (mips32_get_c0(C0_STATUS) | portINITIAL_SR | SR_TIMER_IRQ );
-	*( pxTopOfStack + CTX_EPC/4 ) = (StackType_t) pxCode;
-	*( pxTopOfStack + CTX_RA/4 ) = (StackType_t) portTASK_RETURN_ADDRESS;
-	*( pxTopOfStack + CTX_A0/4 ) = (StackType_t) pvParameters; /* Parameters to pass in. */
+	*( pxTopOfStack + CTX_CAUSE/SZREG ) = (StackType_t) mips_getcr();
+	*( pxTopOfStack + CTX_STATUS/SZREG ) = (StackType_t) (mips32_get_c0(C0_STATUS) | portINITIAL_SR | SR_TIMER_IRQ );
+	*( pxTopOfStack + CTX_EPC/SZREG ) = (StackType_t) pxCode;
+	*( pxTopOfStack + CTX_RA/SZREG ) = (StackType_t) portTASK_RETURN_ADDRESS;
+	*( pxTopOfStack + CTX_A0/SZREG ) = (StackType_t) pvParameters; /* Parameters to pass in. */
 
 	/* Save GP register value in the context */
- 	asm volatile ("sw $gp, %0" : "=m" (*( pxTopOfStack + CTX_GP/4 )));
+	asm volatile ("sd $gp, %0" : "=m" (*( pxTopOfStack + CTX_GP/SZREG )));
 
 	return pxTopOfStack;
 }
