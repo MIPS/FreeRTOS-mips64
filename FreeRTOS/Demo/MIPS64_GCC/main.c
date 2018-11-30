@@ -144,42 +144,12 @@ static void prvQueueSendTask( void *pvParameters )
 {
 portTickType xNextWakeTime;
 const unsigned long ulValueToSend = 100UL;
-#if defined(__mips_dsp) || defined(__mips_hard_float)
-unsigned int reg;
-#endif
 
 	/* Initialise xNextWakeTime - this only needs to be done once. */
 	xNextWakeTime = xTaskGetTickCount();
 
 	for( ;; )
 	{
-#ifdef __mips_dsp
-		__asm__ __volatile__ (
-				"li		%0, 0x12345678\n\t"
-				"mthi   %0, $ac2\n\t"
-				"li		%0, 0x9abcdef0\n\t"
-				"mtlo   %0, $ac2\n\t"
-				: "=r"(reg)
-				);
-#endif
-
-#ifdef __mips_hard_float
-		__asm__ __volatile__ (
-				"li		%0, 0x12345678\n\t"
-				"mtc1   %0, $f0\n\t"
-				"li		%0, 0x9abcdef0\n\t"
-				"mtc1   %0, $f2\n\t"
-				"li		%0, 0x12345678\n\t"
-				"mtc1   %0, $f4\n\t"
-				"li		%0, 0x9abcdef0\n\t"
-				"mtc1   %0, $f6\n\t"
-				"li		%0, 0x12345678\n\t"
-				"mtc1   %0, $f8\n\t"
-				"li		%0, 0x9abcdef0\n\t"
-				"mtc1   %0, $f10\n\t"
-				: "=r"(reg)
-				);
-#endif
 
 		/* Place this task in the blocked state until it is time to run again.
 		The block time is specified in ticks, the constant used converts ticks
@@ -195,37 +165,6 @@ unsigned int reg;
 
 		printf("%s message sent\n", __func__);
 
-#ifdef __mips_hard_float
-		unsigned int f0, f1, f2, f3, f4, f5;
-		__asm__ __volatile__ (
-				"mfc1   %0, $f0\n\t"
-				"mfc1   %1, $f2\n\t"
-				"mfc1   %2, $f4\n\t"
-				"mfc1   %3, $f6\n\t"
-				"mfc1   %4, $f8\n\t"
-				"mfc1   %5, $f10\n\t"
-				: "=r"(f0), "=r"(f1), "=r"(f2), "=r"(f3), "=r"(f4), "=r"(f5)
-				);
-		printf("*S* f0: %p\tf1: %p\tf2: %p\tf3: %p\tf4: %p\tf5: %p\t\n",
-				f0, f1, f2, f3, f4, f5);
-		configASSERT( f0 == 0x12345678 &&
-					  f1 == 0x9abcdef0 &&
-					  f2 == 0x12345678 &&
-					  f3 == 0x9abcdef0 &&
-					  f4 == 0x12345678 &&
-					  f5 == 0x9abcdef0);
-#endif
-
-#ifdef __mips_dsp
-		unsigned int reghi = 0, reglo = 0;
-		__asm__ __volatile__ (
-				"mfhi   %0, $ac2\n\t"
-				"mflo   %1, $ac2\n\t"
-				: "=r"(reghi), "=r"(reglo)
-				);
-
-		configASSERT( ( reghi == 0x12345678 && reglo == 0x9abcdef0 ) );
-#endif
 	}
 }
 /*-----------------------------------------------------------*/
@@ -235,41 +174,9 @@ static unsigned long ulRcv;
 static void prvQueueReceiveTask( void *pvParameters )
 {
 unsigned long ulReceivedValue;
-#if defined(__mips_dsp) || defined(__mips_hard_float)
-unsigned int reg;
-#endif
 
 	for( ;; )
 	{
-
-#ifdef __mips_dsp
-		__asm__ __volatile__ (
-				"li		%0, 0x87654321\n\t"
-				"mthi   %0, $ac2\n\t"
-				"li		%0, 0x0fedcba9\n\t"
-				"mtlo   %0, $ac2\n\t"
-				: "=r"(reg)
-				);
-#endif
-
-#ifdef __mips_hard_float
-		__asm__ __volatile__ (
-				"li		%0, 0x87654321\n\t"
-				"mtc1   %0, $f0\n\t"
-				"li		%0, 0x0fedcba9\n\t"
-				"mtc1   %0, $f2\n\t"
-				"li		%0, 0x87654321\n\t"
-				"mtc1   %0, $f4\n\t"
-				"li		%0, 0x0fedcba9\n\t"
-				"mtc1   %0, $f6\n\t"
-				"li		%0, 0x87654321\n\t"
-				"mtc1   %0, $f8\n\t"
-				"li		%0, 0x0fedcba9\n\t"
-				"mtc1   %0, $f10\n\t"
-				: "=r"(reg)
-				);
-#endif
-
 		/* Wait until something arrives in the queue - this task will block
 		indefinitely provided INCLUDE_vTaskSuspend is set to 1 in
 		FreeRTOSConfig.h. */
@@ -277,37 +184,6 @@ unsigned int reg;
 
 		printf("%s message received\n", __func__);
 
-#ifdef __mips_hard_float
-		unsigned int f0, f1, f2, f3, f4, f5;
-		__asm__ __volatile__ (
-				"mfc1   %0, $f0\n\t"
-				"mfc1   %1, $f2\n\t"
-				"mfc1   %2, $f4\n\t"
-				"mfc1   %3, $f6\n\t"
-				"mfc1   %4, $f8\n\t"
-				"mfc1   %5, $f10\n\t"
-				: "=r"(f0), "=r"(f1), "=r"(f2), "=r"(f3), "=r"(f4), "=r"(f5)
-				);
-		printf("*R* f0: %p\tf1: %p\tf2: %p\tf3: %p\tf4: %p\tf5: %p\t\n",
-				f0, f1, f2, f3, f4, f5);
-		configASSERT( f0 == 0x87654321 &&
-					  f1 == 0x0fedcba9 &&
-					  f2 == 0x87654321 &&
-					  f3 == 0x0fedcba9 &&
-					  f4 == 0x87654321 &&
-					  f5 == 0x0fedcba9);
-#endif
-
-#ifdef __mips_dsp
-		unsigned int reghi = 0, reglo = 0;
-		__asm__ __volatile__ (
-				"mfhi   %0, $ac2\n\t"
-				"mflo   %1, $ac2\n\t"
-				: "=r"(reghi), "=r"(reglo)
-				);
-
-		configASSERT( ( reghi == 0x87654321 && reglo == 0x0fedcba9) );
-#endif
 		/*  To get here something must have been received from the queue, but
 		is it the expected value?  If it is, print out a pass message, if no,
 		print out a fail message. */

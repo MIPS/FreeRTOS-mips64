@@ -26,23 +26,6 @@ else
 CFLAGS += -EL
 endif
 
-# Are we using microMIPS
-ifeq ($(UMIPS),1)
-CFLAGS += -mmicromips -minterlink-compressed
-endif
-
-# Are we compiling in DSP support
-ifeq ($(DSP),1)
-CFLAGS += -mdspr2
-endif
-
-# Are we compiling in hardware floating point support
-ifeq ($(FPU),1)
-CFLAGS += -mhard-float
-else
-CFLAGS += -msoft-float
-endif
-
 # by default we try to enable GIC EIC if possible, if you want to force it to be
 # off set NO_GIC_EIC=1
 ifeq ($(NO_GIC_EIC),1)
@@ -101,23 +84,6 @@ LDSCRIPT+=-Wl,--defsym,__app_start=$(APP_START)
 LDSCRIPT+=-Wl,--defsym,__memory_size=$(MEMORY_SIZE)
 LDSCRIPT+=-Wl,--defsym,__memory_base=$(MEMORY_BASE)
 
-ifeq ($(ROMABLE), 1)
-CFLAGS += -DC0_CONFIG0_VALUE=$(C0_CONFIG0_VALUE)
-CFLAGS += -DC0_CONFIG1_VALUE=$(C0_CONFIG1_VALUE)
-CFLAGS += -DC0_CONFIG2_VALUE=$(C0_CONFIG2_VALUE)
-CFLAGS += -DC0_CONFIG3_VALUE=$(C0_CONFIG3_VALUE)
-CFLAGS += -DC0_CONFIG4_VALUE=$(C0_CONFIG4_VALUE)
-CFLAGS += -DC0_CONFIG5_VALUE=$(C0_CONFIG5_VALUE)
-CFLAGS += -DC0_WATCHHI_VALUE=$(C0_WATCHHI_VALUE)
-CFLAGS += -DC0_WATCHHI1_VALUE=$(C0_WATCHHI1_VALUE)
-CFLAGS += -DC0_WATCHHI2_VALUE=$(C0_WATCHHI2_VALUE)
-CFLAGS += -DC0_WATCHHI3_VALUE=$(C0_WATCHHI3_VALUE)
-CFLAGS += -DC0_WATCHHI4_VALUE=$(C0_WATCHHI4_VALUE)
-CFLAGS += -DC0_WATCHHI5_VALUE=$(C0_WATCHHI5_VALUE)
-CFLAGS += -DC0_WATCHHI6_VALUE=$(C0_WATCHHI6_VALUE)
-CFLAGS += -DC0_WATCHHI7_VALUE=$(C0_WATCHHI7_VALUE)
-endif
-
 # Source & object files
 SRC := \
 	../../Source/queue.c \
@@ -136,39 +102,17 @@ ASMSRC := \
 	$(MIPS64_SRC_DIR)/port_asm.S \
 	$(MIPS64_SRC_DIR)/handler.S
 
-ifeq ($(ROMABLE), 1)
-INCLUDE += -I $(MIPS_ELF_ROOT)/share/mips/boot
-BOOTASMSRC := \
-	boot/reset_predef.S \
-	$(MIPS_ELF_ROOT)/share/mips/boot/init_caches_predef.S \
-	$(MIPS_ELF_ROOT)/share/mips/boot/init_l23caches_predef.S \
-	$(MIPS_ELF_ROOT)/share/mips/boot/init_cp0_predef.S \
-	$(MIPS_ELF_ROOT)/share/mips/boot/init_tlb_predef.S \
-	$(MIPS_ELF_ROOT)/share/mips/boot/corecheck_predef.S
-
-BOOTSRC := \
-	boot/boot_hw_init.c
-endif
-
 OBJDIR ?= build
 
 BOBJ := $(BOOTSRC:.c=.o) $(BOOTASMSRC:.S=.o)
 TOBJ := $(SRC:.c=.o) $(ASMSRC:.S=.o)
-
-ifeq ($(TWO_STAGE_BOOT), 0)
 TOBJ += $(BOBJ)
-endif
 
 TARGET_OBJ := $(addprefix $(OBJDIR)/, $(notdir $(TOBJ)))
 BOOT_OBJ := $(addprefix $(OBJDIR)/, $(notdir $(BOBJ)))
 
 # Rules
 TARGET = RTOSDemo.elf
-
-ifeq ($(TWO_STAGE_BOOT), 1)
-TARGET_BOOT = boot.elf
-CFLAGS += -DTWO_STAGE_BOOT
-endif
 
 CONFIGS=$(shell cd $(CONFIGS_DIR); ls *)
 
@@ -177,11 +121,6 @@ all: $(TARGET) $(TARGET_BOOT)
 
 $(TARGET): $(TARGET_OBJ)
 	$(GCC) $(CFLAGS) -Wl,-Map=$(subst .elf,.map,$@) $(LDSCRIPT) -o $@ $^
-
-ifeq ($(TWO_STAGE_BOOT), 1)
-$(TARGET_BOOT): $(BOOT_OBJ)
-	$(GCC) $(CFLAGS) -Wl,-Map=$(subst .elf,.map,$@) $(BOOT_LDSCRIPT) -o $@ $^
-endif
 
 $(TARGET_OBJ): | $(OBJDIR)
 

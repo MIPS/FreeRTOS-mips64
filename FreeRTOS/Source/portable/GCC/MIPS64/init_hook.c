@@ -104,7 +104,7 @@ void hardware_init_hook(void)
 
 	/* Setup Vectored Interrupts */
 	mips_biscr( CR_IV );
-	mips32_setintctl( ( mips32_getintctl() & ~INTCTL_VS ) | INTCTL_VS_32 );
+	mips32_setintctl( ( mips32_getintctl() & ~INTCTL_VS ) | INTCTL_VS_64 );
 
 #ifdef __mips_dsp
 	/* Ensure the core has DSP module */

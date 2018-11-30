@@ -2,7 +2,6 @@
 # Description is kept brief here for simplicity.
 
 # Which mips revision are we targetting?
-# mips32r2-6
 ARCH?=mips64r6
 
 # Big or Little Endian?
@@ -10,12 +9,6 @@ BE?=0
 
 # use microMips ASE?
 UMIPS?=0
-
-# Support DSP context switching?
-DSP?=0
-
-# Support FPU context switching?
-FPU?=0
 
 # Disable GIC EIC if detected?
 NO_GIC_EIC?=1
@@ -30,43 +23,6 @@ INHERIT_GIC?=0
 APP_START?=0xffffffff80200000
 MEMORY_SIZE?=0x8000
 MEMORY_BASE?=0xffffffff80100000
-
-# If you want to produce a bootable image with code that would work
-# from cold reset set this to 1
-# Ie: you have no bootloader to load FreeRTOS for you.
-ROMABLE?=0
-
-# Only applicable of ROMABLE is 1
-#
-# You can choose to make the boot code part of FreeRTOS elf or as a separate elf.
-TWO_STAGE_BOOT?=0
-
-# This setting is only applicable when ROMABLE is 1
-#
-# It defines the bootcode entry point
-BOOT_START?=0xBFC00000
-
-# The following settings are only applicable when ROMABLE is 1.
-#
-# They're required to do initial core check and system setup.
-# The best way to fill them is to copy the settings of your hardware
-# after a cold reset using Codescape or console to read them.
-# This will help the bootcode to verify it's running on the
-# correct hardware and set things up correctly from cold boot.
-C0_CONFIG0_VALUE?=0x00000000
-C0_CONFIG1_VALUE?=0x00000000
-C0_CONFIG2_VALUE?=0x00000000
-C0_CONFIG3_VALUE?=0x00000000
-C0_CONFIG4_VALUE?=0x00000000
-C0_CONFIG5_VALUE?=0x00000000
-C0_WATCHHI_VALUE?=0x00000000
-C0_WATCHHI1_VALUE?=0x00000000
-C0_WATCHHI2_VALUE?=0x00000000
-C0_WATCHHI3_VALUE?=0x00000000
-C0_WATCHHI4_VALUE?=0x00000000
-C0_WATCHHI5_VALUE?=0x00000000
-C0_WATCHHI6_VALUE?=0x00000000
-C0_WATCHHI7_VALUE?=0x00000000
 
 # CPU clock Frequency in HZ
 CPU_CLOCK_HZ?=20000000
