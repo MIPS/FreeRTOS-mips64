@@ -76,19 +76,8 @@ volatile uint64_t *GCR;
 volatile uint64_t *GIC;
 uint64_t EIC;
 
-
-/*Compressed (16bit) instruction streams are big endian halfword order */
-#if defined(__nanomips__)
-static inline uint32_t SWAP16(uint32_t val)
-{
-	return (val >> 16) | (val << 16);
-}
-#endif
-
-
 /* The interrupt vector table.*/
 extern void prvInterruptHandoff( void );
-
 
 //FIXME - this is added as workaround for TLB error on GCR check
 // on try to access to 0x00000000B6100000
@@ -127,7 +116,7 @@ int i, j;
 	}
 
 	/* Reset the GIC VPE local interrupt source mask */
-	GIC_COREi_RMASK = 0xffffffff;
+	GIC_COREi_RMASK = 0xffffffffffffffff;
 #ifndef CONFIG_NO_GIC_EIC
 	GIC_COREi_CTL |= EIC_MODE;
 #else
@@ -164,18 +153,17 @@ int i, j;
 #ifndef CONFIG_INHERIT_GIC
 	/* Reset all the interrupts */
 	for( i = 0; i < numEnts / 32 ; i++ ) {
-		( &GIC_SH_RMASK31_0 )[ i ] = 0xffffffff;
+		( &GIC_SH_RMASK31_0 )[ i ] = 0xffffffffffffffff;
 	}
 #endif
 }
 
 /* Install an interrupt handler, returning the old handler address. */
-//FIXME - check if it is needed to port patching mechanism for 64-bit systems
 void pvPortInstallISR( UBaseType_t uxPriority, void ( *fn )( void ) )
 {
 void * pvISR;
 uint32_t offset;
-uint64_t addr_hi, addr_lo;
+uint16_t addr_hi, addr_lo, addr_higher, addr_highest;
 uint32_t stride = ( mips32_getintctl() & INTCTL_VS );
 
 	/* Return if the interrupt number is out of range */
@@ -185,37 +173,31 @@ uint32_t stride = ( mips32_getintctl() & INTCTL_VS );
 		configASSERT( uxPriority < 8 );
 
 	/* Get the destination offset */
-	offset = 0x200 + ( uxPriority * stride );
+	/* mips64/I6500 - generated code have one leading NOP */
+	offset = 0x200 + ( uxPriority * stride ) + 4;
+
 	pvISR = ( uint64_t * )( ( mips32_getebase() & 0xfffffffffffff000 ) + offset );
 
 	/* Copy the jump */
-	memcpy(pvISR, (void *)( (int64_t)prvInterruptHandoff & 0xfffffffffffffffe ), 16);
+	/* mips64/I6500 - compiler already generate similar code */
+	memcpy(pvISR, (void *)( (int64_t)prvInterruptHandoff & 0xfffffffffffffffe ), 32);
 
-	/* Patch the address */
-	addr_hi = (((uint64_t)fn) & 0xffff0000) >> 16;
-	addr_lo = (uint64_t)fn & 0x0000ffff;
+	/* mips64/I6500 - splita 64bit address to 4 parts */
+	addr_highest = ((uint64_t)fn >> 0x30) & 0xffff;
+	addr_higher =  ((uint64_t)fn >> 0x20) & 0xffff;
+	addr_hi = ((uint64_t)fn >> 0x10) & 0xffff;
+	addr_lo = (uint64_t)fn & 0xffff;
 
-#if defined(__mips_micromips)
-	/* in micromips the higher nibble of 4 bytes word is the address to patch */
-	*(uint16_t *)( pvISR + 2 ) = addr_hi;
-	*(uint16_t *)( pvISR + 6 ) = addr_lo;
-#elif defined(__nanomips__)
-	/* in nanomips the LUI encoding is batsh1t crazy */
-	*(uint32_t *)( pvISR) &= SWAP16(~0x001FFFFD);
-	*(uint32_t *)( pvISR) |= SWAP16( ((uint32_t)fn & 0x001FF000) | ((addr_hi << 1) >> 4) & 0x0ffc | addr_hi >> 15 );
+	/* mips64/I6500 - patch and take care of overflow */
+        *(uint16_t *)( pvISR + 0 ) = addr_highest + ((addr_higher & 0x8000) >> 15);
+        *(uint16_t *)( pvISR + 4 ) = addr_higher + ((addr_hi & 0x8000) >> 15);
+	*(uint16_t *)( pvISR + 12 ) = addr_hi + ((addr_lo & 0x8000) >> 15);
+	*(uint16_t *)( pvISR + 20 ) = addr_lo;
 
-	*(uint32_t *)( pvISR + 4 ) &= SWAP16(~0x00000FFF);
-	*(uint32_t *)( pvISR + 4 ) |= SWAP16(addr_lo & 0xFFF);
-
-#else
-	/* in mips32 the lower nibble of 4 bytes word is the address to patch */
-	*(uint16_t *)( pvISR + 0 ) = addr_hi;
-	*(uint16_t *)( pvISR + 4 ) = addr_lo;
-#endif
 
 	/*sync the Icache */
 	if ( mips32_getconfig1() & CFG1_IL_MASK)
-		mips_sync_icache((uint64_t)pvISR,16);
+		mips_sync_icache((uint64_t)pvISR,32);
 
 	if ( !EIC )
 		mips_bissr(SR_IM0 << uxPriority);

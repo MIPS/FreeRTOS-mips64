@@ -81,10 +81,15 @@
 	at the interrupt vector locations, then patch it up ready to go */
 	.global	prvInterruptHandoff
 prvInterruptHandoff:
-	lui		k0, %hi(prvInterruptHandoff)
-	ori		k0, k0, %lo(prvInterruptHandoff)
-	jr		k0
+	lui     k1,%highest(prvInterruptHandoff)
+	daddiu  k1,k1,%higher(prvInterruptHandoff)
+	dsll    k1,k1,0x10
+	daddiu  k1,k1,%hi(prvInterruptHandoff)
+	dsll    k1,k1,0x10
+	daddiu  k1,k1,%lo(prvInterruptHandoff)
+	jr              k1
 		nop
+
 
 /******************************************************************/
 
