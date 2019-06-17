@@ -10,38 +10,16 @@ include $(CONFIG_FILE)
 
 TOP = $(PWD)
 
-# Are we compiling for the Rev 6 ISA
-ifeq ($(ARCH),mips64r6)
 CROSS_COMPILE ?= mips-img-elf
 CFLAGS += -mabi=64
-else
-CROSS_COMPILE ?= mips-mti-elf
-endif
 GCC = $(CROSS_COMPILE)-gcc
-
-# Big Endian instead of LE?
-ifeq ($(BE),1)
-CFLAGS += -EB
-else
 CFLAGS += -EL
-endif
+CFLAGS += -msoft-float
 
 # by default we try to enable GIC EIC if possible, if you want to force it to be
 # off set NO_GIC_EIC=1
 ifeq ($(NO_GIC_EIC),1)
 CFLAGS += -DCONFIG_NO_GIC_EIC
-endif
-
-# if GIC is detected, we reset external interrupts setup by default. if you want
-# to inherit the settings from an external (possibly bootloader) source, set
-# INHERIT_GIC=1
-ifeq ($(INHERIT_GIC),1)
-CFLAGS += -DCONFIG_INHERIT_GIC
-endif
-
-# Needs retesting and verification
-ifeq ($(TRACE),1)
-CFLAGS +=-DENABLE_TRACE
 endif
 
 MIPS64_SRC_DIR=../../Source/portable/GCC/MIPS64

@@ -81,43 +81,11 @@ void hardware_init_hook(void)
 	/* Initialise the GIC */
 	vPortInitGIC();
 
-#ifdef __mips_micromips
-
-	/* Ensure micromips is supported */
-	assert( mips32_getconfig3() & CFG3_MCU );
-	assert( ( mips32_getconfig3() & CFG3_ISA_MASK ) != CFG3_ISA_MIPS );
-
-	/* set micromips exception entry point */
-	mips32_bisconfig3( CFG3_IOE );
-#else
-	/* Ensure mips32 is supported */
-	if ( mips32_getconfig3() & CFG3_MCU ) {
-		assert( ( mips32_getconfig3() & CFG3_ISA_MASK ) != CFG3_ISA_UMIPS );
-
-		/* set mips32 exception entry point */
-		mips32_bicconfig3( CFG3_IOE );
-	}
-#endif
-
 	/* Ensure the core has Vectored Interrupts support */
 	assert( mips32_getconfig3() & CFG3_VI );
 
 	/* Setup Vectored Interrupts */
 	mips_biscr( CR_IV );
 	mips32_setintctl( ( mips32_getintctl() & ~INTCTL_VS ) | INTCTL_VS_64 );
-
-#ifdef __mips_dsp
-	/* Ensure the core has DSP module */
-	assert( mips32_getconfig3() & CFG3_DSPP );
-
-	/* Enable DSP */
-	mips_bissr( SR_MX );
-	assert( mips_getsr() & SR_MX );
-#endif
-
-#ifdef __mips_hard_float
-	/* Ensure the core has FPU implemented */
-	assert( mips32_getconfig1() & CFG1_FP );
-#endif
 }
 

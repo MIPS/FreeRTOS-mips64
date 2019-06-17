@@ -107,14 +107,6 @@
 	REG_S   $31, CTX_REG(31)(k1)
 	PTR_S   $0, CTX_LINK(k1) 	/* Clear the link field.  */
 
-	/* Check ISA release and optionally restore HI/LO registers.  */
-#if (__mips_isa_rev < 6)
-	mfhi	$9
-	REG_S	$9, CTX_HI0(k1)
-	mflo	$10
-	REG_S	$10, CTX_LO0(k1)
-#endif
-
 	/* Save CP0 registers.  */
 	PTR_MFC0 $31, C0_EPC
 	REG_S	$31, CTX_EPC(k1)
@@ -126,14 +118,6 @@
    C0_EPC ready to eret.  */
 
 .macro _gpctx_load
-
-	/* Check ISA release and optionally restore HI/LO registers.  */
-#if (__mips_isa_rev < 6)
-	REG_L	$9, CTX_HI0(a0)
-	REG_L	$10, CTX_LO0(a0)
-	mthi	$9
-	mtlo	$10
-#endif
 
 	/* Restore the general registers.  */
 	REG_L	$1, CTX_REG(1)(a0)

@@ -121,9 +121,5 @@
 #define INCLUDE_vTaskDelete							0
 #define INCLUDE_vTaskSuspend						0
 
-#if defined(ENABLE_TRACE)
-#include "trace.h"
-#endif
-
 #endif	/* FREERTOSCONFIG_H */
 

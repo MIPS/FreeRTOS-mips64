@@ -83,6 +83,9 @@ extern "C"
 #define HW4                 0x06
 #define HW5                 0x07
 
+/* Use KSEG1 for 64bit address */
+#define KSEG1	((void  *)0xffffffffa0000000)
+
 /* GIC Base definitions */
 #define GCR_BASE GCR[0x8/sizeof(uint64_t)]
 #define GCR_GIC_BASE GCR[0x80/sizeof(uint64_t)]

@@ -79,11 +79,6 @@ uint64_t EIC;
 /* The interrupt vector table.*/
 extern void prvInterruptHandoff( void );
 
-//FIXME - this is added as workaround for TLB error on GCR check
-// on try to access to 0x00000000B6100000
-#define KSEG1_BASE      ((void  *)0xffffffffa0000000)
-
-
 /* Initialise the GIC for use with the interrupt system */
 void vPortInitGIC( void )
 {
@@ -93,7 +88,7 @@ int i, j;
 	if ( mips32_getconfig3() & CFG3_CMGCR ) {
 		/* Locate the GCR if config3 indicates it's present */
 		GCR = ( uint64_t * )
-				( KSEG1_BASE + ( ( _m64c0_mfc0( 15, 3 ) & 0x0ffffc00 ) << 4 ) );
+				( KSEG1 + ( ( _m64c0_mfc0( 15, 3 ) & 0x0ffffc00 ) << 4 ) );
 	}
 
 	/* if GCR is 0 this means no GIC is present */
@@ -105,7 +100,7 @@ int i, j;
 #ifdef GIC_BASE_ADDRESS
 	GCR_GIC_BASE = GIC_BASE_ADDRESS;
 #endif	
-	GIC = KSEG1_BASE + ( GCR_GIC_BASE & ~GIC_EN );
+	GIC = KSEG1 + ( GCR_GIC_BASE & ~GIC_EN );
 	GCR_GIC_BASE |= GIC_EN;
 
 	/* if GIC is 0 then it's not present */
@@ -220,75 +215,8 @@ UBaseType_t uxSavedStatusRegister;
 
 	return uxSavedStatusRegister;
 }
-/*-----------------------------------------------------------*/
 
 void vPortClearInterruptMaskFromISR( UBaseType_t uxSavedStatusRegister )
 {
 	mips_setsr( uxSavedStatusRegister );
 }
-
-/*-----------------------------------------------------------*/
-
-//FIXME - port to 64bit ISA?
-void vRouteExternalNonEicInterrupt( uint32_t ext_int, uint32_t vpe, uint32_t vpe_int)
-{
-	uint32_t vpe_reg = 0x2000 + (ext_int * 0x20);
-	uint32_t pin_reg = 0x500 + (ext_int * 0x04);
-	uint32_t vpe_bit = 1 << vpe;
-	uint32_t vpe_pin = vpe_int & 0x0F;
-	uint32_t mask_reg = 0x380 + ((ext_int / 32) * 0x04);
-	uint32_t mask_reg_bit = 1 << (ext_int % 32);
-	
-	GIC[vpe_reg/4] = vpe_bit;
-	GIC[pin_reg/4] = vpe_pin; 
-	GIC[mask_reg / 4] |= mask_reg_bit;
-	mips_bissr(0x400 << vpe_int);
-}
-
-//FIXME - port to 64bit ISA?
-void vLevelTrigExternalNonEicInterrupt( uint32_t ext_int, uint32_t pol)
-{
-	uint32_t pol_reg = 0x100 + ((ext_int / 32) * 0x04);
-	uint32_t edge_reg = 0x180 + ((ext_int / 32) * 0x04);
-	uint32_t reg_bit = 1 << (ext_int % 32);
-
-	if (pol) GIC[pol_reg/4] |= reg_bit;
-	else GIC[pol_reg/4] &= ~reg_bit; 
-	GIC[edge_reg/4] &= ~reg_bit;
-}
-
-//FIXME - port to 64bit ISA?
-void vSingleEdgeTrigExternalNonEicInterrupt( uint32_t ext_int, uint32_t pol)
-{
-	uint32_t pol_reg = 0x100 + ((ext_int / 32) * 0x04);
-	uint32_t edge_reg = 0x180 + ((ext_int / 32) * 0x04);
-	uint32_t reg_bit = 1 << (ext_int % 32);
-
-	if (pol) GIC[pol_reg/4] |= reg_bit;
-	else GIC[pol_reg/4] &= ~reg_bit; 
-	GIC[edge_reg/4] |= reg_bit;
-}
-
-//FIXME - port to 64bit ISA?
-void vDualEdgeTrigExternalNonEicInterrupt( uint32_t ext_int)
-{
-	uint32_t dual_reg = 0x200 + ((ext_int / 32) * 0x04);
-	uint32_t edge_reg = 0x180 + ((ext_int / 32) * 0x04);
-	uint32_t reg_bit = 1 << (ext_int % 32);
-
-	GIC[dual_reg/4] |= reg_bit;
-	GIC[edge_reg/4] |= reg_bit;
-}
-
-//FIXME - port to 64bit ISA?
-void vSetInterProcessorInterrupt( uint32_t ext_int)
-{
-	GIC[0xA0] = 0x80000000 | ext_int;
-}
-
-//FIXME - port to 64bit ISA?
-void vClearInterProcessorInterrupt( uint32_t ext_int)
-{
-	GIC[0xA0] = ext_int;
-}
-

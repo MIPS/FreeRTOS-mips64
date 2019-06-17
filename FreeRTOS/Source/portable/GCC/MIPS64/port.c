@@ -144,12 +144,6 @@ StackType_t xISRStack[ configISR_STACK_SIZE ] = { 0 };
 the callers stack, as some functions seem to want to do this. */
 const StackType_t * const xISRStackTop = &( xISRStack[ configISR_STACK_SIZE - 7 ] );
 
-#ifdef __mips_hard_float
-/* pointer to the current and old fpu context for lazy context switching */
-struct fp64ctx *currentfpctx;	/* fpu context of current running task */
-struct fp64ctx *oldfpctx;		/* fpu context of last task that executed fpu */
-#endif
-
 /*-----------------------------------------------------------*/
 
 /*
@@ -157,29 +151,14 @@ struct fp64ctx *oldfpctx;		/* fpu context of last task that executed fpu */
  */
 StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 {
-#ifdef FPGA_TARGET
-	int FPGA = 1;
-#else
-	int FPGA = 0;
-#endif
 	*pxTopOfStack = (StackType_t) 0xDEADBEEF;
 	pxTopOfStack--;
 
 	*pxTopOfStack = (StackType_t) 0x12345678;       /* Word to which the stack pointer will be left pointing after context restore. */
 	pxTopOfStack--;
 
-#ifdef __mips_hard_float
-	*pxTopOfStack = (StackType_t) 0; /* padding for 8-byte alignment */
-	pxTopOfStack--;
-	*pxTopOfStack = (StackType_t) 0; /* pointer to fpu context */
-	pxTopOfStack--;
-#endif
-
 	/* create a space for a full context */
 	pxTopOfStack -= CTX_SIZE/SZREG;
-#ifdef __mips_dsp
-	pxTopOfStack -= DSPCTX_SIZE/SZREG;
-#endif
 
 	/* fill up some initial values for us to kick in */
 	*( pxTopOfStack + CTX_CAUSE/SZREG ) = (StackType_t) mips_getcr();
@@ -281,38 +260,5 @@ UBaseType_t uxSavedStatus;
 void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
 {
 	configASSERT( xTask == NULL );
-}
-#endif
-
-#ifdef __mips_hard_float
-void _mips_handle_exception (struct gpctx *ctx, int exception)
-{
-	if ( exception == EXC_CPU ) {
-		mips_bissr(SR_CU1);
-		ctx->status |= SR_CU1;
-
-		if ( !currentfpctx ) {
-			currentfpctx = pvPortMalloc( sizeof( struct fp64ctx ) );
-			configASSERT( currentfpctx != NULL );
-		}
-
-		/* this means no one exec'd fpu since we last run */
-		if ( oldfpctx == currentfpctx )
-				return;
-
-		if ( oldfpctx )
-			_fpctx_save( &oldfpctx->fp );
-
-		_fpctx_load( &currentfpctx->fp );
-
-		/* next fpu exception must save our context as it's not necessarily the
-		 * next context switch will cause fpu exception and it's very hard for
-		 * any future task to determine which was the last one that performed
-		 * fpu operations. so by saving this pointer now we give this knowledge
-		 * to that future task */
-		oldfpctx = currentfpctx;
-	} else {
-		__exception_handle( ctx, exception );
-	}
 }
 #endif
